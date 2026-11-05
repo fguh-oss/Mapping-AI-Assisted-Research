@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map AI onto the Research Process | AI-Assisted Research</title>
+<meta name="description" content="A traffic-light activity for responsible, human-in-the-loop scholarship.">
+<style>
+:root{
+  --navy:#1b3a5c;
+  --navy-dark:#12293f;
+  --teal:#2bb3a3;
+  --gold:#d4a017;
+  --green:#2e7d32;
+  --green-bg:#d9f0db;
+  --yellow:#8a6d00;
+  --yellow-bg:#fdf1c4;
+  --red:#b3261e;
+  --red-bg:#fadcda;
+  --ink:#1f2933;
+  --muted:#5b6b7a;
+  --line:#d8dee5;
+  --paper:#ffffff;
+  --bg:#eef2f6;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.55;
+}
+header{
+  background:linear-gradient(135deg,var(--navy-dark),var(--navy));
+  color:#fff;
+  padding:28px 20px 24px;
+  text-align:center;
+}
+header h1{margin:0 0 6px;font-size:1.75rem;letter-spacing:.3px}
+header p{margin:0;color:#bcd2e4;font-style:italic}
+main{max-width:980px;margin:0 auto;padding:20px 16px 80px}
+.card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:20px;
+  margin-bottom:22px;
+  box-shadow:0 1px 3px rgba(16,32,48,.06);
+}
+h2{color:var(--navy);margin:0 0 4px;font-size:1.3rem}
+h3{color:var(--navy);margin:22px 0 8px;font-size:1.02rem;text-transform:uppercase;letter-spacing:.6px}
+.sub{color:var(--muted);margin:0 0 14px;font-size:.93rem}
+.ident{display:flex;gap:12px;flex-wrap:wrap}
+.ident label{flex:1 1 220px;font-size:.85rem;color:var(--muted)}
+input[type=text],textarea{
+  width:100%;font:inherit;color:var(--ink);
+  border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:#fcfdfe;
+}
+textarea{resize:vertical;min-height:62px}
+input:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal)}
+
+/* legend */
+.legend{display:grid;gap:8px;margin:12px 0}
+.legend div{padding:9px 12px;border-radius:6px;font-size:.9rem;border-left:6px solid}
+.lg-green{background:var(--green-bg);border-color:var(--green)}
+.lg-yellow{background:var(--yellow-bg);border-color:var(--yellow)}
+.lg-red{background:var(--red-bg);border-color:var(--red)}
+.note{background:#f4f7fa;border-left:4px solid var(--navy);padding:10px 12px;border-radius:0 6px 6px 0;font-size:.9rem;margin:10px 0}
+.override{background:#fdf1c4;border-left:4px solid var(--gold);padding:10px 12px;border-radius:0 6px 6px 0;font-size:.9rem;font-weight:600}
+
+/* rows */
+.stage-group{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.stage-head{
+  width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:var(--teal);color:#fff;border:0;padding:11px 12px;
+  font-family:inherit;font-weight:700;font-size:.82rem;letter-spacing:.8px;text-transform:uppercase;
+  text-align:left;cursor:pointer;
+}
+.stage-head .grp-count{font-weight:600;letter-spacing:0;opacity:.9;white-space:nowrap}
+.stage-head .caret{transition:transform .15s}
+.stage-group.collapsed .caret{transform:rotate(-90deg)}
+.stage-group.collapsed .body{display:none}
+.row{
+  display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;
+  padding:10px 12px;border-top:1px solid var(--line);
+}
+.stage-group .row:first-of-type{border-top:none}
+.row.has-why{grid-template-columns:150px 1fr 1fr}
+.row.stage-row{grid-template-columns:150px 1fr 1fr 200px}
+.label{font-size:.94rem}
+.swatch{display:flex;gap:6px}
+.swatch button{
+  flex:1;border:1.5px solid var(--line);background:#fff;border-radius:5px;
+  padding:7px 0;font:inherit;font-size:.72rem;font-weight:700;letter-spacing:.5px;
+  cursor:pointer;color:var(--muted);transition:.12s;
+}
+.swatch button:hover{border-color:var(--navy)}
+.swatch button[data-c=G].on{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.swatch button[data-c=Y].on{background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow)}
+.swatch button[data-c=R].on{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.row.G{background:linear-gradient(90deg,var(--green-bg) 0 5px,#fff 5px)}
+.row.Y{background:linear-gradient(90deg,var(--yellow-bg) 0 5px,#fff 5px)}
+.row.R{background:linear-gradient(90deg,var(--red-bg) 0 5px,#fff 5px)}
+.mark{display:flex;gap:10px;font-size:.8rem;color:var(--muted);align-items:center}
+.mark label{display:flex;gap:4px;align-items:center;cursor:pointer}
+
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px;font-size:.9rem}
+.checks label{display:flex;gap:8px;align-items:flex-start;background:#f8fafc;border:1px solid var(--line);border-radius:6px;padding:8px 10px;cursor:pointer}
+
+.field{margin:12px 0}
+.field > span{display:block;font-weight:600;font-size:.92rem;margin-bottom:5px}
+
+/* toolbar */
+.toolbar{
+  position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);
+  padding:10px 16px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
+  box-shadow:0 -2px 10px rgba(16,32,48,.08);z-index:20;
+}
+.toolbar button{
+  font:inherit;font-weight:600;font-size:.88rem;padding:9px 16px;border-radius:6px;
+  border:1px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer;
+}
+.toolbar button.primary{background:var(--navy);color:#fff}
+.toolbar button:hover{filter:brightness(1.08)}
+.status{font-size:.8rem;color:var(--muted);text-align:center;padding:6px}
+
+.progress{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:10px}
+.progress i{display:block;height:100%;background:var(--teal);width:0;transition:width .25s}
+.counts{display:flex;gap:14px;font-size:.85rem;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.counts b{font-weight:700}
+.takeaway{background:#e8f1f8;border:1px solid #c6dcec;border-radius:8px;padding:14px;text-align:center;font-weight:600;color:var(--navy)}
+footer{text-align:center;color:var(--muted);font-size:.82rem;padding:18px}
+
+@media(max-width:700px){
+  header{padding:20px 14px 18px}
+  header h1{font-size:1.28rem}
+  header p{font-size:.88rem}
+  main{padding:14px 10px 72px}
+  .card{padding:14px;border-radius:8px}
+  h2{font-size:1.15rem}
+
+  /* stack every row and force a readable reading order */
+  .row,.row.has-why,.row.stage-row{grid-template-columns:1fr;gap:10px;padding:13px 12px}
+  .row .label{order:1;font-weight:600;font-size:.97rem;line-height:1.4}
+  .row .swatch{order:2}
+  .row input[type=text]{order:3}
+  .row .mark{order:4;gap:18px;flex-wrap:wrap}
+
+  /* finger-sized targets */
+  .swatch{gap:8px}
+  .swatch button{padding:13px 0;font-size:.78rem}
+  .mark input[type=checkbox]{width:19px;height:19px}
+  .checks{grid-template-columns:1fr}
+  .checks label{padding:11px 10px}
+
+  .toolbar{gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+  .toolbar button{flex:1 1 46%;padding:12px 6px;font-size:.82rem}
+}
+@media print{
+  body{background:#fff}
+  .toolbar,.status,header{position:static}
+  .toolbar,.no-print{display:none !important}
+  .card{break-inside:avoid;box-shadow:none}
+  .stage-group .body{display:block !important}
+  .stage-head{cursor:default}
+  a{text-decoration:none;color:inherit}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Map AI onto the Research Process</h1>
+  <p>A traffic-light activity for responsible, human-in-the-loop scholarship</p>
+</header>
+
+<main>
+  <!-- PURPOSE -->
+  <section class="card">
+    <div class="ident">
+      <label>Name (optional)<input type="text" id="meta-name" data-save placeholder="Your name"></label>
+      <label>Program / Department<input type="text" id="meta-dept" data-save placeholder="e.g., Graduate Medical Education"></label>
+      <label>Date<input type="text" id="meta-date" data-save></label>
+    </div>
+
+    <h3>Purpose</h3>
+    <p class="sub">Examine where AI can augment research and where human judgment, verification, and accountability must remain primary. You will first evaluate broad research stages, then reconsider them by examining the specific tasks within each stage.</p>
+
+    <h3>Traffic-light framework</h3>
+    <div class="legend">
+      <div class="lg-green"><b>GREEN — AI-supportive.</b> AI can perform a substantial portion of the task with routine human review.</div>
+      <div class="lg-yellow"><b>YELLOW — AI-assisted.</b> AI may contribute, but expert oversight, independent verification, or additional safeguards are essential.</div>
+      <div class="lg-red"><b>RED — Human-led or restricted.</b> Do not delegate the task: it requires accountable scholarly judgment, or the data, tool, or context make AI use inappropriate.</div>
+    </div>
+    <div class="note"><b>Color the use, not the technology.</b> The same task may receive different colors depending on the data, tool, stakes, and verification process.</div>
+    <div class="override">DATA OVERRIDE: Entering identifiable, confidential, proprietary, or otherwise protected data into an unapproved AI system is RED, regardless of the task.</div>
+
+    <div class="progress"><i id="bar"></i></div>
+    <div class="counts">
+      <span>Completed: <b id="c-done">0</b> / <b id="c-total">0</b></span>
+      <span style="color:var(--green)">Green: <b id="c-G">0</b></span>
+      <span style="color:var(--yellow)">Yellow: <b id="c-Y">0</b></span>
+      <span style="color:var(--red)">Red: <b id="c-R">0</b></span>
+    </div>
+  </section>
+
+  <!-- PART 1 -->
+  <section class="card">
+    <h2>Part 1 — Macro-level mapping</h2>
+    <p class="sub"><b>Individually, 4–5 minutes.</b> Rate each research stage on your initial judgment. Use the star for the stage with the greatest potential for useful AI augmentation, and the shield for the stage where human judgment most needs protection.</p>
+    <div id="part1"></div>
+  </section>
+
+  <!-- PART 2 -->
+  <section class="card">
+    <h2>Part 2 — Task-level mapping</h2>
+    <p class="sub"><b>Pairs or groups of three, 7–8 minutes.</b> Rate each task. When you disagree, do not immediately compromise — identify the condition that changes the color.</p>
+    <div id="part2"></div>
+    <div class="field"><span>Conditions that changed our decisions</span>
+      <textarea id="p2-conditions" data-save placeholder="What made a task move between green, yellow, and red?"></textarea>
+    </div>
+  </section>
+
+  <!-- PART 3 -->
+  <section class="card">
+    <h2>Part 3 — Revisit your macro map</h2>
+    <p class="sub"><b>3 minutes.</b> Return to Part 1 and change any ratings the task-level analysis altered. Record what shifted and why.</p>
+    <div id="shifts" class="note no-print">Make a Part 1 rating, then change it, and the shift will be recorded here automatically.</div>
+
+    <div class="field"><span>Which stage became more complicated after examining its component tasks — and why?</span>
+      <textarea id="p3-complicated" data-save></textarea></div>
+    <div class="field"><span>AI can contribute most effectively when it is used to…</span>
+      <textarea id="p3-ai" data-save></textarea></div>
+    <div class="field"><span>Human judgment cannot be delegated when the researcher must…</span>
+      <textarea id="p3-human" data-save></textarea></div>
+    <div class="field"><span>A task can move from GREEN to YELLOW or RED when…</span>
+      <textarea id="p3-move" data-save></textarea></div>
+
+    <h3>Conditions to consider</h3>
+    <div class="checks" id="conds"></div>
+
+    <div class="field" style="margin-top:16px"><span>Discussion notes</span>
+      <textarea id="p3-notes" data-save style="min-height:110px"></textarea></div>
+
+    <div class="takeaway">Responsible AI use is determined at the level of a specific task, within a specific context, with a defined human verification and accountability process.</div>
+  </section>
+
+  <footer>AI-Assisted Research&nbsp; |&nbsp; Human-in-the-Loop Scholarship&nbsp; |&nbsp; UTHSC Teaching and Learning Center</footer>
+</main>
+
+<div class="toolbar no-print">
+  <button class="primary" onclick="window.print()">Print / Save as PDF</button>
+  <button onclick="exportText()">Download responses (.txt)</button>
+  <button onclick="copySummary()">Copy summary</button>
+  <button onclick="resetAll()">Reset worksheet</button>
+</div>
+<div class="status no-print" id="status">Responses save automatically in this browser.</div>
+
+<script>
+/* ---------- content ---------- */
+const STAGES = ["Research question","Literature review","Study design","Data collection","Data analysis","Interpretation","Academic writing","Dissemination"];
+
+const TASKS = [
+ ["Research question",["Brainstorming possible questions","Refining the wording of a question","Selecting a meaningful and feasible research question"]],
+ ["Literature review",["Generating keywords and search terms","Searching and scoping the literature","Summarizing individual articles","Synthesizing findings across studies","Evaluating relevance and evidentiary quality"]],
+ ["Study design",["Comparing possible research methods","Drafting survey items, interview questions, or procedural materials","Selecting the study design","Selecting outcomes and the analytic approach"]],
+ ["Data collection",["Creating recruitment or procedural materials","Organizing collected data","Extracting information from source materials","Processing identifiable, confidential, or sensitive data"]],
+ ["Data analysis",["Drafting analysis code","Cleaning or restructuring data","Creating data visualizations","Coding qualitative responses","Identifying patterns in data","Selecting or approving the analytic method"]],
+ ["Interpretation",["Generating possible explanations for findings","Interpreting unexpected findings","Evaluating alternative explanations","Determining clinical, educational, or practical significance","Drawing load-bearing conclusions"]],
+ ["Academic writing",["Organizing and formatting a manuscript","Drafting boilerplate or descriptive text","Improving clarity, grammar, or flow","Making claims based on the evidence","Writing conclusions and recommendations"]],
+ ["Dissemination",["Adapting content for a specific audience","Preparing slides, figures, or visual summaries","Selecting which findings or conclusions to emphasize","Documenting and disclosing AI use"]],
+ ["Responsibilities across all stages",["Exercising professional and scholarly judgment","Ensuring ethical conduct and appropriate data protection","Verifying AI outputs and accepting accountability for the final work"]]
+];
+
+const CONDITIONS = ["Sensitivity or identifiability of the data","Security and institutional approval of the AI platform","Consequences of an error","Availability of independent verification","Expertise of the person reviewing the output","Degree of scholarly or professional judgment involved","Documentation and disclosure requirements"];
+
+/* ---------- state ---------- */
+const KEY = "ai-traffic-light-v1";
+let state = JSON.parse(localStorage.getItem(KEY) || "{}");
+state.colors ||= {}; state.why ||= {}; state.marks ||= {}; state.text ||= {}; state.checks ||= {}; state.shifts ||= [];
+
+const save = () => { localStorage.setItem(KEY, JSON.stringify(state)); flash(); };
+let t; function flash(){ const s=document.getElementById('status'); s.textContent="Saved "+new Date().toLocaleTimeString(); clearTimeout(t); t=setTimeout(()=>s.textContent="Responses save automatically in this browser.",1800); }
+
+/* ---------- builders ---------- */
+function swatch(id, withWhy, labelText){
+  const row = document.createElement('div');
+  row.className = 'row' + (withWhy ? ' has-why' : '');
+  row.id = 'row-'+id;
+
+  const sw = document.createElement('div');
+  sw.className='swatch';
+  ['G','Y','R'].forEach(c=>{
+    const b=document.createElement('button');
+    b.type='button'; b.dataset.c=c; b.textContent={G:'GREEN',Y:'YELLOW',R:'RED'}[c];
+    b.setAttribute('aria-label', labelText+' — '+b.textContent);
+    b.onclick=()=>setColor(id,c,labelText);
+    sw.appendChild(b);
+  });
+
+  const lab=document.createElement('div'); lab.className='label'; lab.textContent=labelText;
+  row.append(sw,lab);
+
+  if(withWhy){
+    const inp=document.createElement('input');
+    inp.type='text'; inp.placeholder='Why? What conditions affect your decision?';
+    inp.value = state.why[id]||'';
+    inp.oninput = e => { state.why[id]=e.target.value; save(); };
+    row.appendChild(inp);
+  }
+  return row;
+}
+
+function setColor(id,c,labelText){
+  const prev = state.colors[id];
+  if(prev===c){ delete state.colors[id]; }
+  else{
+    state.colors[id]=c;
+    if(prev && id.startsWith('s')) logShift(labelText, prev, c);
+  }
+  paint(id); save(); refresh();
+}
+
+function logShift(label, from, to){
+  state.shifts = state.shifts.filter(s=>s.label!==label);
+  state.shifts.push({label, from, to, at:new Date().toLocaleTimeString()});
+}
+
+function paint(id){
+  const row=document.getElementById('row-'+id); if(!row) return;
+  const c=state.colors[id]||'';
+  row.classList.remove('G','Y','R'); if(c) row.classList.add(c);
+  row.querySelectorAll('.swatch button').forEach(b=>b.classList.toggle('on', b.dataset.c===c));
+}
+
+/* Part 1 */
+const p1=document.getElementById('part1');
+STAGES.forEach((s,i)=>{
+  const id='s'+i;
+  const row=swatch(id,true,s);
+  const m=document.createElement('div'); m.className='mark';
+  [['star','★ Highest AI potential'],['shield','🛡 Protect judgment']].forEach(([k,txt])=>{
+    const l=document.createElement('label');
+    const cb=document.createElement('input'); cb.type='checkbox';
+    cb.checked = state.marks[k]===id;
+    cb.onchange=()=>{ state.marks[k] = cb.checked ? id : null; buildMarks(); save(); };
+    l.append(cb,document.createTextNode(txt)); m.appendChild(l);
+  });
+  m.dataset.for=id;
+  row.appendChild(m);
+  row.classList.add('stage-row');
+  p1.appendChild(row);
+});
+function buildMarks(){
+  document.querySelectorAll('.mark').forEach(m=>{
+    const id=m.dataset.for;
+    m.querySelectorAll('input')[0].checked = state.marks.star===id;
+    m.querySelectorAll('input')[1].checked = state.marks.shield===id;
+  });
+}
+
+/* Part 2 */
+const p2=document.getElementById('part2');
+const isPhone = window.matchMedia('(max-width:700px)').matches;
+TASKS.forEach(([stage,list],gi)=>{
+  const g=document.createElement('div'); g.className='stage-group'; g.dataset.g=gi;
+  if(isPhone && gi>0) g.classList.add('collapsed');
+
+  const h=document.createElement('button');
+  h.type='button'; h.className='stage-head';
+  h.setAttribute('aria-expanded', String(!g.classList.contains('collapsed')));
+  h.innerHTML = `<span><span class="caret">▾</span> ${stage}</span>`
+              + `<span class="grp-count" id="gc-${gi}">0/${list.length}</span>`;
+  if(gi===TASKS.length-1) h.style.background='var(--navy)';
+  h.onclick=()=>{
+    g.classList.toggle('collapsed');
+    h.setAttribute('aria-expanded', String(!g.classList.contains('collapsed')));
+  };
+
+  const body=document.createElement('div'); body.className='body';
+  list.forEach((task,ti)=> body.appendChild(swatch(`t${gi}-${ti}`,false,task)));
+  g.append(h,body);
+  p2.appendChild(g);
+});
+
+/* conditions */
+const condWrap=document.getElementById('conds');
+CONDITIONS.forEach((c,i)=>{
+  const l=document.createElement('label');
+  const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!!state.checks[i];
+  cb.onchange=()=>{ state.checks[i]=cb.checked; save(); };
+  l.append(cb,document.createTextNode(c)); condWrap.appendChild(l);
+});
+
+/* text fields */
+document.querySelectorAll('[data-save]').forEach(el=>{
+  if(state.text[el.id]!==undefined) el.value=state.text[el.id];
+  if(el.id==='meta-date' && !el.value) el.value=new Date().toLocaleDateString();
+  el.oninput=()=>{ state.text[el.id]=el.value; save(); };
+});
+
+/* ---------- refresh ---------- */
+const $ = id => document.getElementById(id);
+
+function refresh(){
+  const ids=Object.keys(state.colors);
+  const total=STAGES.length + TASKS.reduce((n,[,l])=>n+l.length,0);
+  const n={G:0,Y:0,R:0};
+  ids.forEach(i=>{ const c=state.colors[i]; if(c in n) n[c]++; });
+  $('c-done').textContent=ids.length;
+  $('c-total').textContent=total;
+  $('c-G').textContent=n.G;
+  $('c-Y').textContent=n.Y;
+  $('c-R').textContent=n.R;
+  $('bar').style.width=(ids.length/total*100)+'%';
+
+  TASKS.forEach(([,list],gi)=>{
+    const el=$('gc-'+gi); if(!el) return;
+    const done=list.filter((_,ti)=>state.colors[`t${gi}-${ti}`]).length;
+    el.textContent=`${done}/${list.length}`;
+  });
+
+  const sh=document.getElementById('shifts');
+  const name={G:'GREEN',Y:'YELLOW',R:'RED'};
+  sh.innerHTML = state.shifts.length
+    ? '<b>Ratings you revised:</b><br>'+state.shifts.map(s=>`• ${s.label}: ${name[s.from]} → ${name[s.to]}`).join('<br>')
+    : 'Make a Part 1 rating, then change it, and the shift will be recorded here automatically.';
+}
+Object.keys(state.colors).forEach(paint);
+buildMarks(); refresh();
+
+/* ---------- export ---------- */
+function summary(){
+  const name={G:'GREEN',Y:'YELLOW',R:'RED','':'—'};
+  const g=id=>name[state.colors[id]||''];
+  let o=['MAP AI ONTO THE RESEARCH PROCESS','Traffic-light worksheet — AI-Assisted Research','',
+    'Name: '+(state.text['meta-name']||''),
+    'Program/Dept: '+(state.text['meta-dept']||''),
+    'Date: '+(state.text['meta-date']||''),'',
+    'PART 1 — MACRO-LEVEL MAPPING'];
+  STAGES.forEach((s,i)=>{
+    let line=`  [${g('s'+i)}] ${s}`;
+    if(state.marks.star==='s'+i) line+='  ★';
+    if(state.marks.shield==='s'+i) line+='  🛡';
+    if(state.why['s'+i]) line+=`\n      Why: ${state.why['s'+i]}`;
+    o.push(line);
+  });
+  o.push('','PART 2 — TASK-LEVEL MAPPING');
+  TASKS.forEach(([stage,list],gi)=>{
+    o.push('  '+stage.toUpperCase());
+    list.forEach((task,ti)=>o.push(`    [${g(`t${gi}-${ti}`)}] ${task}`));
+  });
+  o.push('','  Conditions that changed our decisions:','  '+(state.text['p2-conditions']||''));
+  o.push('','PART 3 — REVISIT YOUR MACRO MAP');
+  if(state.shifts.length) state.shifts.forEach(s=>o.push(`  ${s.label}: ${name[s.from]} → ${name[s.to]}`));
+  else o.push('  (no revisions recorded)');
+  [['Stage that became more complicated','p3-complicated'],
+   ['AI can contribute most effectively when it is used to','p3-ai'],
+   ['Human judgment cannot be delegated when the researcher must','p3-human'],
+   ['A task can move from GREEN to YELLOW or RED when','p3-move']]
+   .forEach(([t,k])=>o.push('','  '+t+':','  '+(state.text[k]||'')));
+  o.push('','  Conditions checked:');
+  CONDITIONS.forEach((c,i)=>{ if(state.checks[i]) o.push('    ✓ '+c); });
+  o.push('','  Discussion notes:','  '+(state.text['p3-notes']||''));
+  o.push('','KEY TAKEAWAY: Responsible AI use is determined at the level of a specific task,','within a specific context, with a defined human verification and accountability process.');
+  return o.join('\n');
+}
+function exportText(){
+  const blob=new Blob([summary()],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='AI-Traffic-Light-Worksheet.txt';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+function copySummary(){
+  navigator.clipboard.writeText(summary())
+    .then(()=>{document.getElementById('status').textContent='Summary copied to clipboard.';})
+    .catch(()=>{document.getElementById('status').textContent='Copy failed — use the download button.';});
+}
+function resetAll(){
+  if(!confirm('Clear all responses on this device?')) return;
+  localStorage.removeItem(KEY); location.reload();
+}
+</script>
+</body>
+</html>
